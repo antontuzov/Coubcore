@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Go backend service
+  backend:
+    build: .
+    container_name: coubcore-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - blockchain-data:/app
+    environment:
+      - GO_ENV=production
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    networks:
+      - coubcore-network
+
+  # React frontend service
+  frontend:
+    build: ./frontend
+    container_name: coubcore-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - coubcore-network
+
+  # Prometheus monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: coubcore-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - coubcore-network
+
+  # Grafana dashboard
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: coubcore-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - coubcore-network
+
+# Volumes for persistent data
+volumes:
+  blockchain-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+# Networks for service communication
+networks:
+  coubcore-network:
+    driver: bridge

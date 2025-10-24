@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: coubcore-backend
+  labels:
+    app: coubcore
+    tier: backend
+spec:
+  selector:
+    app: coubcore
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coubcore-frontend
+  labels:
+    app: coubcore
+    tier: frontend
+spec:
+  selector:
+    app: coubcore
+    tier: frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coubcore-prometheus
+  labels:
+    app: coubcore
+    tier: monitoring
+spec:
+  selector:
+    app: coubcore
+    tier: monitoring
+  ports:
+  - protocol: TCP
+    port: 9090
+    targetPort: 9090
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coubcore-grafana
+  labels:
+    app: coubcore
+    tier: monitoring
+spec:
+  selector:
+    app: coubcore
+    tier: monitoring
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
+  type: LoadBalancer
