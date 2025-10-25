@@ -3,22 +3,33 @@ import { Block } from '../types/blockchain';
 import { getBlockchainInfo } from '../services/blockchainAPI';
 
 interface BlockListProps {
+  blocks?: Block[];
+  loading?: boolean;
   onBlockSelect?: (block: Block) => void;
 }
 
-const BlockList: React.FC<BlockListProps> = ({ onBlockSelect }) => {
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [loading, setLoading] = useState(true);
+const BlockList: React.FC<BlockListProps> = ({ blocks: externalBlocks, loading: externalLoading, onBlockSelect }) => {
+  const [internalBlocks, setInternalBlocks] = useState<Block[]>([]);
+  const [internalLoading, setInternalLoading] = useState(true);
   const [error, setError] = useState('');
   const [chainLength, setChainLength] = useState(0);
 
+  // Use external blocks and loading if provided, otherwise use internal state
+  const blocks = externalBlocks || internalBlocks;
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading;
+
   useEffect(() => {
-    loadLatestBlocks();
-  }, []);
+    // Only load blocks if external blocks are not provided
+    if (!externalBlocks) {
+      loadLatestBlocks();
+    } else {
+      setInternalLoading(false);
+    }
+  }, [externalBlocks]);
 
   const loadLatestBlocks = async () => {
     try {
-      setLoading(true);
+      setInternalLoading(true);
       setError('');
       
       // Get blockchain info
@@ -43,12 +54,12 @@ const BlockList: React.FC<BlockListProps> = ({ onBlockSelect }) => {
         });
       }
       
-      setBlocks(sampleBlocks);
+      setInternalBlocks(sampleBlocks);
     } catch (err) {
       setError('Failed to load blocks');
       console.error(err);
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   };
 
